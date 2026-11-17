@@ -1,0 +1,28 @@
+{
+  "hosting": {
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "/sw.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
+    ]
+  },
+  "firestore": {
+    "database": "ai-studio-android-linkvaul-411b4436-0a7a-4b03-acbe-c1fa64df7036",
+    "rules": "firestore.rules"
+  }
+}
+

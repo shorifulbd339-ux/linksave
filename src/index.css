@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-surface: 248 250 252;
+    --bg-elevated: 255 255 255;
+    --bg-muted: 241 245 249;
+    --text-primary: 15 23 42;
+    --text-secondary: 71 85 105;
+    --text-muted: 148 163 184;
+    --border-subtle: 226 232 240;
+    --border-strong: 203 213 225;
+    --accent: 79 70 229;
+    --accent-hover: 67 56 202;
+    --accent-soft: 238 242 255;
+  }
+
+  .dark {
+    --bg-surface: 9 9 11;
+    --bg-elevated: 20 20 24;
+    --bg-muted: 30 30 36;
+    --text-primary: 244 244 245;
+    --text-secondary: 161 161 170;
+    --text-muted: 113 113 122;
+    --border-subtle: 39 39 42;
+    --border-strong: 63 63 70;
+    --accent: 99 102 241;
+    --accent-hover: 129 140 248;
+    --accent-soft: 30 27 75;
+  }
+
+  html {
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: rgb(var(--bg-surface));
+    color: rgb(var(--text-primary));
+  }
+}
+
+/* Subtle custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--border-strong) / 0.6);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--text-muted));
+}
+

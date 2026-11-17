@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidCategory(cat) {
+      return cat is string && cat in ['facebook','youtube','twitter','telegram','other'];
+    }
+    function isValidLink(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.url is string && data.url.size() >= 4 && data.url.size() <= 2048 &&
+             data.normalizedUrl is string && data.normalizedUrl.size() >= 4 && data.normalizedUrl.size() <= 2048 &&
+             isValidCategory(data.category) &&
+             (!('title' in data) || (data.title is string && data.title.size() <= 120)) &&
+             (!('sampleData' in data) || data.sampleData is bool) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+    function isValidActivity(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.action is string && data.action in ['ADDED','BULK_ADDED','COPIED','DELETED','BULK_DELETED','IMPORTED','EXPORTED','CLEARED'] &&
+             data.summary is string && data.summary.size() >= 1 && data.summary.size() <= 240 &&
+             data.count is int && data.count >= 0 && data.count <= 100000 &&
+             (!('category' in data) || isValidCategory(data.category)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    match /users/{userId}/links/{linkId} {
+      allow get: if isOwner(userId) && isValidId(linkId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(linkId) &&
+                       incoming().keys().hasAll(['userId','url','normalizedUrl','category','createdAt','updatedAt']) &&
+                       incoming().keys().hasOnly(['userId','url','normalizedUrl','category','title','sampleData','createdAt','updatedAt']) &&
+                       isValidLink(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(linkId) &&
+                       isValidLink(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['url','normalizedUrl','category','title','updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(linkId);
+    }
+
+    match /users/{userId}/activities/{activityId} {
+      allow get: if isOwner(userId) && isValidId(activityId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(activityId) &&
+                       incoming().keys().hasAll(['userId','action','summary','count','createdAt']) &&
+                       incoming().keys().hasOnly(['userId','action','summary','count','category','createdAt']) &&
+                       isValidActivity(incoming(), userId);
+      allow update: if false;
+      allow delete: if isOwner(userId) && isValidId(activityId);
+    }
+  }
+}
+
