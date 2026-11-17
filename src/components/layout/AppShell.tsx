@@ -7,6 +7,7 @@ import { PLATFORM_LIST } from '../../config/platforms';
 import type { CreateLinkInput, PlatformCategory } from '../../types/link';
 import { extractLinksFromText, formatUrlsPerLine } from '../../utils/linkParser';
 import { PwaInstallBanner } from '../common/PwaInstallBanner';
+import { LOCAL_USER_ID } from '../../hooks/useAuth';
 import { PlatformBadge } from '../links/PlatformBadge';
 import { MobileBottomNav } from './MobileBottomNav';
 import { SidebarNav } from './SidebarNav';
@@ -146,6 +147,7 @@ export function AppShell({
           isOnline={isOnline}
           fromCache={fromCache}
           hasPendingWrites={hasPendingWrites}
+          isLocalMode={user.uid === LOCAL_USER_ID}
           onOpenMobileMenu={() => setMobileMenuOpen(true)}
           onOpenQuickAdd={() => setPasteModalOpen(true)}
           onToggleTheme={onToggleTheme}

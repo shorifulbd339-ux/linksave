@@ -41,13 +41,14 @@ function isPasscodeUnlocked(): boolean {
 function formatAuthError(err: unknown): string {
   const code = (err as { code?: string })?.code ?? '';
   if (code === 'auth/popup-closed-by-user') {
-    return 'Sign-in popup was closed before completing.';
+    return '[auth/popup-closed-by-user] Sign-in popup was closed before completing.';
   }
   if (code === 'auth/unauthorized-domain') {
     const host = typeof window !== 'undefined' ? window.location.hostname : 'this domain';
-    return `Domain "${host}" is not authorized for Google Sign-In. Add it in Firebase Console → Authentication → Settings → Authorized domains.`;
+    return `[auth/unauthorized-domain] Domain "${host}" is not authorized for Google Sign-In. Add it in Firebase Console → Authentication → Settings → Authorized domains.`;
   }
-  return err instanceof Error ? err.message : 'Failed to sign in with Google.';
+  const msg = err instanceof Error ? err.message : 'Failed to sign in with Google.';
+  return code ? `[${code}] ${msg}` : msg;
 }
 
 export function useAuth(): UseAuthResult {

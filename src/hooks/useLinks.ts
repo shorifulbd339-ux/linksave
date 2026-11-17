@@ -118,9 +118,13 @@ export function useLinks(userId: string | undefined) {
         setLoading(false);
       },
       (err) => {
-        const msg = err.message.toLowerCase().includes('permission')
-          ? `Firestore permission-denied: Ensure you are signed in with Google and "${window.location.hostname}" is added to Firebase Console → Authentication → Authorized domains.`
-          : err.message;
+        const code = (err as { code?: string })?.code ?? '';
+        const isPerm = code === 'permission-denied' || err.message.toLowerCase().includes('permission');
+        const msg = isPerm
+          ? `[${code || 'permission-denied'}] Firestore permission denied: Ensure you are signed in with Google and "${window.location.hostname}" is added to Firebase Console → Authentication → Authorized domains.`
+          : code
+            ? `[${code}] ${err.message}`
+            : err.message;
         setError(msg);
         setLoading(false);
       }

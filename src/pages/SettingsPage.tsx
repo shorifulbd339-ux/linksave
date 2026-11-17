@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { User } from 'firebase/auth';
 import {
   CheckCircle2,
+  Copy,
   Database,
   Download,
   LogOut,
@@ -14,8 +15,10 @@ import {
 import { toast } from 'sonner';
 import { DeleteConfirmModal } from '../components/links/DeleteConfirmModal';
 import { FIREBASE_CONFIG, FIRESTORE_DATABASE_ID } from '../config/firebase';
+import { LOCAL_USER_ID } from '../hooks/useAuth';
 import type { ThemeMode } from '../hooks/useTheme';
 import type { CreateLinkInput, LinkItem } from '../types/link';
+import { copyTextToClipboard } from '../utils/clipboard';
 import { buildSampleLinks } from '../utils/sampleData';
 
 interface SettingsPageProps {
@@ -114,7 +117,22 @@ export function SettingsPage({
                 {user.displayName ?? 'LinkVault User'}
               </p>
               <p className="text-xs text-content-secondary">{user.email}</p>
-              <p className="mt-0.5 font-mono text-[11px] text-content-muted">UID: {user.uid}</p>
+              <div className="mt-1 flex items-center gap-1.5">
+                <p className="font-mono text-[11px] text-content-muted">
+                  Sync UID: {user.uid}
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const ok = await copyTextToClipboard(user.uid);
+                    if (ok) toast.success('Sync UID copied');
+                  }}
+                  title="Copy Sync UID"
+                  className="rounded p-0.5 text-content-muted hover:bg-surface-muted hover:text-content"
+                >
+                  <Copy className="h-3 w-3" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -198,11 +216,28 @@ export function SettingsPage({
 
       {/* Firebase Sync Info */}
       <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-soft">
-        <div className="flex items-center gap-2">
-          <Database className="h-4 w-4 text-accent" />
-          <h2 className="text-sm font-bold text-content">Cloud Firestore Sync</h2>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Database className="h-4 w-4 text-accent" />
+            <h2 className="text-sm font-bold text-content">Cloud Firestore Sync Diagnostics</h2>
+          </div>
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+              user.uid === LOCAL_USER_ID
+                ? 'bg-zinc-500/10 text-content-secondary'
+                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+            }`}
+          >
+            {user.uid === LOCAL_USER_ID ? 'Local Mode' : 'Cloud Live'}
+          </span>
         </div>
         <div className="mt-3 space-y-1.5 rounded-xl bg-surface p-3.5 font-mono text-xs text-content-secondary">
+          <p>
+            <span className="text-content-muted">Email:</span> {user.email ?? 'N/A'}
+          </p>
+          <p className="break-all">
+            <span className="text-content-muted">Sync UID:</span> {user.uid}
+          </p>
           <p>
             <span className="text-content-muted">Project ID:</span> {FIREBASE_CONFIG.projectId}
           </p>

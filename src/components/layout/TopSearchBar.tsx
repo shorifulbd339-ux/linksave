@@ -7,6 +7,7 @@ interface TopSearchBarProps {
   isOnline: boolean;
   fromCache: boolean;
   hasPendingWrites: boolean;
+  isLocalMode?: boolean;
   onOpenMobileMenu: () => void;
   onOpenQuickAdd: () => void;
   onToggleTheme: () => void;
@@ -16,6 +17,7 @@ export function TopSearchBar({
   isOnline,
   fromCache,
   hasPendingWrites,
+  isLocalMode = false,
   onOpenMobileMenu,
   onOpenQuickAdd,
   onToggleTheme,
@@ -73,6 +75,7 @@ export function TopSearchBar({
           isOnline={isOnline}
           fromCache={fromCache}
           hasPendingWrites={hasPendingWrites}
+          isLocalMode={isLocalMode}
         />
 
         <button
