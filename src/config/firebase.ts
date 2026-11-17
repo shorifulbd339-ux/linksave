@@ -1,5 +1,11 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, type Auth } from 'firebase/auth';
+import {
+  browserLocalPersistence,
+  getAuth,
+  GoogleAuthProvider,
+  setPersistence,
+  type Auth,
+} from 'firebase/auth';
 import {
   initializeFirestore,
   getFirestore,
@@ -35,6 +41,7 @@ if (isFirebaseConfigured) {
   if (getApps().length === 0) {
     app = initializeApp(FIREBASE_CONFIG);
     auth = getAuth(app);
+    setPersistence(auth, browserLocalPersistence).catch(() => {});
     try {
       db = initializeFirestore(
         app,
@@ -51,6 +58,7 @@ if (isFirebaseConfigured) {
   } else {
     app = getApp();
     auth = getAuth(app);
+    setPersistence(auth, browserLocalPersistence).catch(() => {});
     db = getFirestore(app, FIRESTORE_DATABASE_ID);
   }
 }

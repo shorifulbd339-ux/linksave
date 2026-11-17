@@ -1,6 +1,6 @@
 import { useMemo, useState, type ClipboardEvent, type FormEvent, type ReactNode } from 'react';
 import type { User } from 'firebase/auth';
-import { ClipboardPaste, ListPlus, Sparkles, X } from 'lucide-react';
+import { AlertTriangle, ClipboardPaste, ListPlus, Sparkles, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { PLATFORM_LIST } from '../../config/platforms';
@@ -20,6 +20,8 @@ interface AppShellProps {
   isOnline: boolean;
   fromCache: boolean;
   hasPendingWrites: boolean;
+  syncError?: string | null;
+  onDismissSyncError?: () => void;
   canInstallPwa: boolean;
   pwaDismissed: boolean;
   onInstallPwa: () => void;
@@ -38,6 +40,8 @@ export function AppShell({
   isOnline,
   fromCache,
   hasPendingWrites,
+  syncError,
+  onDismissSyncError,
   canInstallPwa,
   pwaDismissed,
   onInstallPwa,
@@ -148,6 +152,27 @@ export function AppShell({
         />
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-3.5 pb-24 pt-4 sm:px-5 lg:px-8 lg:pb-10 lg:pt-6">
+          {syncError && (
+            <div className="mb-4 flex items-start justify-between gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-700 dark:text-red-300">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                <div>
+                  <p className="font-semibold">Sync / Authentication Error</p>
+                  <p className="mt-0.5 leading-relaxed opacity-90">{syncError}</p>
+                </div>
+              </div>
+              {onDismissSyncError && (
+                <button
+                  type="button"
+                  onClick={onDismissSyncError}
+                  aria-label="Dismiss error"
+                  className="rounded-lg p-1 text-red-500 hover:bg-red-500/10"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          )}
           <PwaInstallBanner
             visible={canInstallPwa && !pwaDismissed}
             onInstall={onInstallPwa}

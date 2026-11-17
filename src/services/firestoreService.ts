@@ -3,10 +3,7 @@ import {
   deleteDoc,
   deleteField,
   doc,
-  limit,
   onSnapshot,
-  orderBy,
-  query,
   serverTimestamp,
   setDoc,
   Timestamp,
@@ -55,26 +52,27 @@ export function subscribeToLinks(
   onData: (links: LinkItem[], meta: LinksSnapshotMeta) => void,
   onError: (error: Error) => void
 ): Unsubscribe {
-  const q = query(linksCollection(userId), orderBy('createdAt', 'desc'));
   return onSnapshot(
-    q,
+    linksCollection(userId),
     { includeMetadataChanges: true },
     (snapshot) => {
-      const items: LinkItem[] = snapshot.docs.map((docSnap) => {
-        const data = docSnap.data();
-        return {
-          id: docSnap.id,
-          userId: String(data.userId ?? userId),
-          url: String(data.url ?? ''),
-          normalizedUrl: String(data.normalizedUrl ?? data.url ?? ''),
-          category: (data.category as PlatformCategory) ?? 'other',
-          title: typeof data.title === 'string' && data.title.length > 0 ? data.title : undefined,
-          sampleData: typeof data.sampleData === 'boolean' ? data.sampleData : undefined,
-          createdAt: toDate(data.createdAt),
-          updatedAt: toDate(data.updatedAt),
-          pendingSync: docSnap.metadata.hasPendingWrites,
-        };
-      });
+      const items: LinkItem[] = snapshot.docs
+        .map((docSnap) => {
+          const data = docSnap.data();
+          return {
+            id: docSnap.id,
+            userId: String(data.userId ?? userId),
+            url: String(data.url ?? ''),
+            normalizedUrl: String(data.normalizedUrl ?? data.url ?? ''),
+            category: (data.category as PlatformCategory) ?? 'other',
+            title: typeof data.title === 'string' && data.title.length > 0 ? data.title : undefined,
+            sampleData: typeof data.sampleData === 'boolean' ? data.sampleData : undefined,
+            createdAt: toDate(data.createdAt),
+            updatedAt: toDate(data.updatedAt),
+            pendingSync: docSnap.metadata.hasPendingWrites,
+          };
+        })
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
       onData(items, {
         fromCache: snapshot.metadata.fromCache,
@@ -91,23 +89,25 @@ export function subscribeToActivities(
   onError: (error: Error) => void,
   maxItems = 250
 ): Unsubscribe {
-  const q = query(activitiesCollection(userId), orderBy('createdAt', 'desc'), limit(maxItems));
   return onSnapshot(
-    q,
+    activitiesCollection(userId),
     (snapshot) => {
-      const items: ActivityItem[] = snapshot.docs.map((docSnap) => {
-        const data = docSnap.data();
-        return {
-          id: docSnap.id,
-          userId: String(data.userId ?? userId),
-          action: (data.action as ActivityAction) ?? 'ADDED',
-          summary: String(data.summary ?? ''),
-          count: typeof data.count === 'number' ? data.count : 0,
-          category:
-            typeof data.category === 'string' ? (data.category as PlatformCategory) : undefined,
-          createdAt: toDate(data.createdAt),
-        };
-      });
+      const items: ActivityItem[] = snapshot.docs
+        .map((docSnap) => {
+          const data = docSnap.data();
+          return {
+            id: docSnap.id,
+            userId: String(data.userId ?? userId),
+            action: (data.action as ActivityAction) ?? 'ADDED',
+            summary: String(data.summary ?? ''),
+            count: typeof data.count === 'number' ? data.count : 0,
+            category:
+              typeof data.category === 'string' ? (data.category as PlatformCategory) : undefined,
+            createdAt: toDate(data.createdAt),
+          };
+        })
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .slice(0, maxItems);
       onData(items);
     },
     (err) => onError(err)

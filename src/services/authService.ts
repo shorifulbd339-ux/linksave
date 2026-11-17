@@ -1,6 +1,8 @@
 import {
+  browserLocalPersistence,
   getRedirectResult,
   onAuthStateChanged,
+  setPersistence,
   signInWithPopup,
   signInWithRedirect,
   signOut,
@@ -16,8 +18,12 @@ function isLikelyMobileBrowser(): boolean {
 
 export async function signInWithGoogle(): Promise<User | null> {
   if (!auth) {
-    throw new Error('Firebase is not configured. Add VITE_FIREBASE_API_KEY and VITE_FIREBASE_APP_ID to .env.');
+    throw new Error(
+      'Firebase is not configured. Add VITE_FIREBASE_API_KEY and VITE_FIREBASE_APP_ID to your environment.'
+    );
   }
+
+  await setPersistence(auth, browserLocalPersistence);
 
   if (isLikelyMobileBrowser()) {
     await signInWithRedirect(auth, googleProvider);

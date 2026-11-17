@@ -20,6 +20,7 @@ import {
 import { copyMultipleUrls, copyTextToClipboard } from '../utils/clipboard';
 import { normalizeUrl } from '../utils/linkParser';
 import { detectPlatform } from '../utils/platformDetector';
+import { auth } from '../config/firebase';
 import { LOCAL_USER_ID } from './useAuth';
 
 const LOCAL_LINKS_KEY = 'linkvault-local-links';
@@ -99,6 +100,12 @@ export function useLinks(userId: string | undefined) {
       return;
     }
 
+    if (!auth?.currentUser) {
+      setLinks([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -111,7 +118,10 @@ export function useLinks(userId: string | undefined) {
         setLoading(false);
       },
       (err) => {
-        setError(err.message);
+        const msg = err.message.toLowerCase().includes('permission')
+          ? `Firestore permission-denied: Ensure you are signed in with Google and "${window.location.hostname}" is added to Firebase Console → Authentication → Authorized domains.`
+          : err.message;
+        setError(msg);
         setLoading(false);
       }
     );
@@ -352,10 +362,13 @@ export function useLinks(userId: string | undefined) {
     [userId, isLocalMode]
   );
 
+  const clearError = useCallback(() => setError(null), []);
+
   return {
     links,
     loading,
     error,
+    clearError,
     fromCache,
     hasPendingWrites,
     categoryCounts,

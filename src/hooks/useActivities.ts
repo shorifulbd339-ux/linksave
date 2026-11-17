@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { clearActivities, subscribeToActivities } from '../services/firestoreService';
 import type { ActivityItem } from '../types/activity';
+import { auth } from '../config/firebase';
 import { LOCAL_USER_ID } from './useAuth';
 import { LOCAL_ACTIVITIES_KEY, LOCAL_DATA_EVENT } from './useLinks';
 
@@ -41,6 +42,12 @@ export function useActivities(userId: string | undefined) {
       const onLocalUpdate = () => setActivities(readLocalActivities());
       window.addEventListener(LOCAL_DATA_EVENT, onLocalUpdate);
       return () => window.removeEventListener(LOCAL_DATA_EVENT, onLocalUpdate);
+    }
+
+    if (!auth?.currentUser) {
+      setActivities([]);
+      setLoading(false);
+      return;
     }
 
     setLoading(true);

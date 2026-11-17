@@ -15,7 +15,7 @@ const PASSCODE_STORAGE_KEY = 'linkvault-passcode-unlocked';
 const LOCAL_PASSCODE_USER = {
   uid: LOCAL_USER_ID,
   displayName: 'LinkVault Owner',
-  email: 'Passcode Unlocked',
+  email: 'Passcode Unlocked (Local)',
   photoURL: null,
 } as unknown as User;
 
@@ -24,6 +24,7 @@ export interface UseAuthResult {
   loading: boolean;
   signingIn: boolean;
   error: string | null;
+  clearError: () => void;
   signIn: () => Promise<void>;
   unlockWithPasscode: (code: string) => boolean;
   signOut: () => Promise<void>;
@@ -37,11 +38,23 @@ function isPasscodeUnlocked(): boolean {
   }
 }
 
+function formatAuthError(err: unknown): string {
+  const code = (err as { code?: string })?.code ?? '';
+  if (code === 'auth/popup-closed-by-user') {
+    return 'Sign-in popup was closed before completing.';
+  }
+  if (code === 'auth/unauthorized-domain') {
+    const host = typeof window !== 'undefined' ? window.location.hostname : 'this domain';
+    return `Domain "${host}" is not authorized for Google Sign-In. Add it in Firebase Console → Authentication → Settings → Authorized domains.`;
+  }
+  return err instanceof Error ? err.message : 'Failed to sign in with Google.';
+}
+
 export function useAuth(): UseAuthResult {
   const [user, setUser] = useState<User | null>(() =>
-    isPasscodeUnlocked() ? LOCAL_PASSCODE_USER : null
+    !isFirebaseConfigured && isPasscodeUnlocked() ? LOCAL_PASSCODE_USER : null
   );
-  const [loading, setLoading] = useState(() => !isPasscodeUnlocked());
+  const [loading, setLoading] = useState<boolean>(() => isFirebaseConfigured);
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,8 +68,7 @@ export function useAuth(): UseAuthResult {
 
     completeRedirectSignIn().catch((err: unknown) => {
       if (!mounted) return;
-      const message = err instanceof Error ? err.message : 'Redirect sign-in failed.';
-      setError(message);
+      setError(formatAuthError(err));
     });
 
     const unsubscribe = subscribeToAuthState((nextUser) => {
@@ -97,12 +109,7 @@ export function useAuth(): UseAuthResult {
     try {
       await signInWithGoogle();
     } catch (err: unknown) {
-      const code = (err as { code?: string })?.code ?? '';
-      if (code === 'auth/popup-closed-by-user') {
-        setError('Sign-in popup was closed before completing.');
-      } else {
-        setError(err instanceof Error ? err.message : 'Failed to sign in with Google.');
-      }
+      setError(formatAuthError(err));
     } finally {
       setSigningIn(false);
     }
@@ -119,11 +126,14 @@ export function useAuth(): UseAuthResult {
     setUser(null);
   }, []);
 
+  const clearError = useCallback(() => setError(null), []);
+
   return {
     user,
     loading,
     signingIn,
     error,
+    clearError,
     signIn,
     unlockWithPasscode,
     signOut,

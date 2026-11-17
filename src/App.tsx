@@ -22,6 +22,7 @@ function AuthenticatedApp() {
     loading: authLoading,
     signingIn,
     error: authError,
+    clearError: clearAuthError,
     signIn,
     unlockWithPasscode,
     signOut,
@@ -29,6 +30,8 @@ function AuthenticatedApp() {
   const {
     links,
     loading: linksLoading,
+    error: linksError,
+    clearError: clearLinksError,
     fromCache,
     hasPendingWrites,
     categoryCounts,
@@ -94,6 +97,11 @@ function AuthenticatedApp() {
       isOnline={isOnline}
       fromCache={fromCache}
       hasPendingWrites={hasPendingWrites}
+      syncError={linksError || authError}
+      onDismissSyncError={() => {
+        clearLinksError();
+        clearAuthError();
+      }}
       canInstallPwa={canInstall}
       pwaDismissed={isDismissed}
       onInstallPwa={() => {
